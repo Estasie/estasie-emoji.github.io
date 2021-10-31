@@ -18,29 +18,67 @@ function prepareData(result) {
         return item;
     });
 }
+// показать значение метрики за несколько дней
+function showMetricByPeriod(data, page, start, end = start) {
+    if (end === start) {
+        console.log(`Все метрики за ${end} `);
+    } else {
+        console.log(`Все метрики за период ${start} - ${end} `);
+    }
+    let table = {};
 
-// TODO: реализовать
-// показать значение метрики за несколько день
-function showMetricByPeriod() {
+    table.connect = addMetricByDate(data, page, 'connect', start, end);
+    table.ttfb = addMetricByDate(data, page, 'ttfb', start, end);
+    table.load = addMetricByDate(data, page, 'load', start, end);
+    table.generate = addMetricByDate(data, page, 'generate', start, end);
+    table.draw = addMetricByDate(data, page, 'draw', start, end);
+    table.session = addMetricByDate(data, page, 'session_end', start, end);
+
+    console.table(table);
+
 }
 
 // показать сессию пользователя
-function showSession() {
+function showSession(data, reqid, date) {
+    console.log(`Метрики сессии пользователя ${reqid} за ${date}:`);
+    const SampleData = data
+        .filter((item) => item.requestId == reqid && item.date === date)
+        .sort((a, b) => a.date - b.date);
+    let table = {};
+
+    SampleData.forEach(dataItem => {
+        table[dataItem.name] = dataItem.value;
+    });
+
+    console.table(table);
 }
 
 // сравнить метрику в разных срезах
-function compareMetric() {
+
+function compareMetricsDevicesDraw(data, date) {
+    console.log(`Сравнение отрисовки для различных девайсов за ${date}:`);
+    const firstSlice = data.filter(item => item.additional.platform === 'desktop' && item.date === date);
+
+    const secondSlice = data.filter(item => item.additional.platform === 'touch' && item.date === date);
+    let table = {};
+    const fd = addMetricByDate(firstSlice, 'chat with emojies', 'draw', date);
+    const sd = addMetricByDate(secondSlice, 'chat with emojies', 'draw', date);
+    table.desktop = fd;
+    table.touch = sd;
+
+    console.table(table);
+
 }
-
-// любые другие сценарии, которые считаете полезными
-
 
 // Пример
 // добавить метрику за выбранный день
-function addMetricByDate(data, page, name, date) {
+function addMetricByDate(data, page, name, start, end) {
+    if (end === undefined) {
+        end = start;
+    }
+
     let sampleData = data
-        .filter(item => item.page == page && item.name == name && item.date == date)
-        .map(item => item.value);
+        .filter(item => item.page == page && item.name == name && item.date >= start && item.date <= end)
 
     let result = {};
 
@@ -52,6 +90,21 @@ function addMetricByDate(data, page, name, date) {
 
     return result;
 }
+
+// рассчитывает все метрики за день
+function calcMetricsByDate(data, page, start, end) {
+    console.log(`Все метрики за ${start}:`);
+
+    let table = {};
+    table.connect = addMetricByDate(data, page, 'connect', start, end);
+    table.ttfb = addMetricByDate(data, page, 'ttfb', start, end);
+    table.load = addMetricByDate(data, page, 'load', start, end);
+    table.generate = addMetricByDate(data, page, 'generate', start, end);
+    table.draw = addMetricByDate(data, page, 'draw', start, end);
+    table.session = addMetricByDate(data, page, 'session_end', start, end);
+    return table;
+};
+
 // рассчитывает все метрики за день
 function calcMetricsByDate(data, page, date) {
     console.log(`All metrics for ${date}:`);
@@ -73,7 +126,13 @@ fetch('https://shri.yandex/hw/stat/data?counterId=D8F28E50-3339-11EC-9EDF-9F9309
     .then(result => {
         let data = prepareData(result);
 
-        calcMetricsByDate(data, 'send test', '2021-10-22');
+        const mbd = calcMetricsByDate(data, 'chat with emojies', '2021-10-28');
+        console.table(mbd);
 
-        // добавить свои сценарии, реализовать функции выше
-    });
+        showMetricByPeriod(data, "chat with emojies", "2021-10-28", "2021-10-29");
+        showSession(data, "633982288943", "2021-10-28");
+        compareMetricsDevicesDraw(data, "2021-10-28");
+
+
+        // добавить свои сценарии, реализовать функции вышe
+});
