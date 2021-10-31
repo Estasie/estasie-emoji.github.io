@@ -64,8 +64,64 @@
     </div>
     <div class="statistic-result"></div>
 </body>
+ <script src="Counter.js"></script>
+ <script>
+                let counter = new Counter();
+                let session_end = null;
 
+                counter.init('4154b1ca-7b5f-401e-b4bb-2b78aa08fe9e', String(Math.random()).substr(2, 12), 'chat with emojies');
+                counter.setAdditionalParams({
+                    env: 'production',
+                    platform: 'desktop'
+                });
+
+                counter.send('connect', performance.timing.connectEnd - performance.timing.connectStart);
+                counter.send('ttfb', performance.timing.responseEnd - performance.timing.requestStart);
+                counter.send('session_end', session_end - performance.timing.connectStart);
+
+                let timeStart = Date.now();
+
+                setTimeout(function () {
+                    document.querySelector('.send-btn').classList.add('sending');
+
+                    counter.send('send message button', Date.now() - timeStart);
+                    document.querySelector('.send-btn').classList.remove('sending');
+                }, Math.random() * 1000 + 500);
+
+                let uuidv4 = function () {
+                    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+                        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+                    );
+                }
+
+                let drawData = function () {
+                    let html = '',
+                        count = 500,
+                        genStart = Date.now();
+
+                    for (let i = 0; i < count; i++) {
+                        html += `<div class="row">${uuidv4().toUpperCase()}</div>`
+                    }
+
+                    counter.send('generate', Date.now() - genStart);
+
+                    let drawStart = Date.now();
+
+                    requestAnimationFrame(function () {
+                        counter.send('draw', Date.now() - drawStart);
+                    });
+                };
+
+                document.querySelector('.send-btn').onclick = function () {
+                    let timeStart = Date.now();
+
+                    setTimeout(function () {
+                        counter.send('load', Date.now() - timeStart);
+
+                        drawData();
+                    }, Math.random() * 1000 + 2000);
+                }
+                window.addEventListener('beforeunload', () => session_end = Date.now());
+</script>
 <script src="script.js"></script>
-<script src="datacollector.js"></script>
-<script src="send.js"></script>
 </html>
