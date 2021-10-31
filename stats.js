@@ -18,6 +18,8 @@ function prepareData(result) {
         return item;
     });
 }
+
+// TODO: реализовать
 // показать значение метрики за несколько дней
 function showMetricByPeriod(data, page, start, end = start) {
     if (end === start) {
@@ -79,6 +81,7 @@ function addMetricByDate(data, page, name, start, end) {
 
     let sampleData = data
         .filter(item => item.page == page && item.name == name && item.date >= start && item.date <= end)
+        .map(item => item.value);
 
     let result = {};
 
@@ -105,23 +108,7 @@ function calcMetricsByDate(data, page, start, end) {
     return table;
 };
 
-// рассчитывает все метрики за день
-function calcMetricsByDate(data, page, date) {
-    console.log(`All metrics for ${date}:`);
-
-    let table = {};
-    table.connect = addMetricByDate(data, page, 'connect', date);
-    table.ttfb = addMetricByDate(data, page, 'ttfb', date);
-    table.load = addMetricByDate(data, page, 'load', date);
-    table.square = addMetricByDate(data, page, 'square', date);
-    table.load = addMetricByDate(data, page, 'load', date);
-    table.generate = addMetricByDate(data, page, 'generate', date);
-    table.draw = addMetricByDate(data, page, 'draw', date);
-
-    console.table(table);
-};
-
-fetch('https://shri.yandex/hw/stat/data?counterId=D8F28E50-3339-11EC-9EDF-9F93090795B1')
+fetch('https://shri.yandex/hw/stat/data?counterId=4154b1ca-7b5f-401e-b4bb-2b78aa08fe9e')
     .then(res => res.json())
     .then(result => {
         let data = prepareData(result);
@@ -132,7 +119,7 @@ fetch('https://shri.yandex/hw/stat/data?counterId=D8F28E50-3339-11EC-9EDF-9F9309
         showMetricByPeriod(data, "chat with emojies", "2021-10-28", "2021-10-29");
         showSession(data, "633982288943", "2021-10-28");
         compareMetricsDevicesDraw(data, "2021-10-28");
-
+        
 
         // добавить свои сценарии, реализовать функции вышe
-});
+    });
